@@ -1,10 +1,8 @@
 // Elements
-const root = document.documentElement;
 const menuToggle = document.querySelector('.menu-toggle');
 const nav = document.querySelector('.site-nav');
 const year = document.getElementById('year');
 const contactForm = document.querySelector('#contact-form');
-const themeToggle = document.getElementById('theme-toggle');
 const modalOverlay = document.getElementById('modal-overlay');
 const modalBody = document.getElementById('modal-body');
 const modalClose = document.querySelector('.modal-close');
@@ -17,43 +15,6 @@ if (year) {
     year.textContent = new Date().getFullYear();
 }
 
-// 2. Theme Switcher (Light / Dark)
-const THEME_STORAGE_KEY = 'portfolio-theme';
-
-const getInitialTheme = () => {
-    const saved = localStorage.getItem(THEME_STORAGE_KEY);
-    if (saved === 'dark' || saved === 'light') {
-        return saved;
-    }
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-};
-
-const applyTheme = (theme) => {
-    root.setAttribute('data-theme', theme);
-    if (themeToggle) {
-        const isDark = theme === 'dark';
-        themeToggle.setAttribute('aria-label', isDark ? 'Switch to light theme' : 'Switch to dark theme');
-        themeToggle.setAttribute('title', isDark ? 'Switch to light theme' : 'Switch to dark theme');
-    }
-};
-
-const currentTheme = getInitialTheme();
-applyTheme(currentTheme);
-
-if (themeToggle) {
-    themeToggle.addEventListener('click', () => {
-        const activeTheme = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-        applyTheme(activeTheme);
-        localStorage.setItem(THEME_STORAGE_KEY, activeTheme);
-    });
-}
-
-// Listen for system preference changes
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-    if (!localStorage.getItem(THEME_STORAGE_KEY)) {
-        applyTheme(e.matches ? 'dark' : 'light');
-    }
-});
 
 // 3. Mobile Navigation Menu
 if (menuToggle && nav) {
