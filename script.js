@@ -319,3 +319,118 @@ if (contactForm) {
         }
     });
 }
+
+// 10. GitHub Repositories — Live Fetch
+(function loadGitHubRepos() {
+    const grid = document.getElementById('gh-repo-grid');
+    if (!grid) return;
+
+    const GITHUB_USER = 'boamahbenedictelikem';
+    const SKIP_REPOS = new Set([
+        'portfolio-website',
+        'skills-introduction-to-github',
+        'skills-copilot-codespaces-vscode',
+    ]);
+
+    // GitHub language colours (subset)
+    const LANG_COLORS = {
+        JavaScript: '#f1e05a',
+        TypeScript: '#3178c6',
+        Python: '#3572A5',
+        HTML: '#e34c26',
+        CSS: '#563d7c',
+        PHP: '#4F5D95',
+        'C++': '#f34b7d',
+        Java: '#b07219',
+        Shell: '#89e051',
+        Vue: '#41b883',
+    };
+
+    function langColor(lang) {
+        return LANG_COLORS[lang] || '#7a8e88';
+    }
+
+    function buildCard(repo) {
+        const card = document.createElement('a');
+        card.href = repo.html_url;
+        card.target = '_blank';
+        card.rel = 'noopener noreferrer';
+        card.className = 'gh-repo-card';
+        card.setAttribute('aria-label', `View ${repo.name} on GitHub`);
+
+        const name = document.createElement('span');
+        name.className = 'gh-repo-name';
+        name.textContent = repo.name.replace(/-/g, '\u00a0').replace(/_/g, '\u00a0');
+
+        const desc = document.createElement('p');
+        desc.className = 'gh-repo-desc';
+        desc.textContent = repo.description || 'No description provided.';
+
+        const footer = document.createElement('div');
+        footer.className = 'gh-repo-footer';
+
+        if (repo.language) {
+            const dot = document.createElement('span');
+            dot.className = 'gh-lang-dot';
+            dot.style.background = langColor(repo.language);
+            dot.setAttribute('aria-hidden', 'true');
+
+            const lang = document.createElement('span');
+            lang.className = 'gh-lang-name';
+            lang.textContent = repo.language;
+
+            footer.appendChild(dot);
+            footer.appendChild(lang);
+        }
+
+        if (repo.stargazers_count > 0) {
+            const stars = document.createElement('span');
+            stars.className = 'gh-stat';
+            stars.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>' + repo.stargazers_count;
+            footer.appendChild(stars);
+        }
+
+        if (repo.forks_count > 0) {
+            const forks = document.createElement('span');
+            forks.className = 'gh-stat';
+            forks.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><path d="M6 9v2a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V9"/></svg>' + repo.forks_count;
+            footer.appendChild(forks);
+        }
+
+        const arrow = document.createElement('span');
+        arrow.className = 'gh-arrow';
+        arrow.setAttribute('aria-hidden', 'true');
+        arrow.textContent = '\u2197';
+        footer.appendChild(arrow);
+
+        card.appendChild(name);
+        card.appendChild(desc);
+        card.appendChild(footer);
+        return card;
+    }
+
+    fetch('https://api.github.com/users/' + GITHUB_USER + '/repos?per_page=100&sort=updated&type=public')
+        .then(function(res) {
+            if (!res.ok) throw new Error('GitHub API error');
+            return res.json();
+        })
+        .then(function(repos) {
+            var filtered = repos.filter(function(r) {
+                return !r.fork && !SKIP_REPOS.has(r.name) && !r.archived;
+            });
+
+            grid.innerHTML = '';
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '<p class="gh-error">No public repositories found.</p>';
+                return;
+            }
+
+            filtered.forEach(function(repo) {
+                grid.appendChild(buildCard(repo));
+            });
+        })
+        .catch(function() {
+            grid.innerHTML = '<p class="gh-error">Could not load repositories — <a href="https://github.com/' + GITHUB_USER + '" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">view them on GitHub \u2197</a></p>';
+        });
+}());
